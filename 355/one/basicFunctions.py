@@ -75,6 +75,8 @@ def if_func():
 
 # ifelse
 def ifelse_func():
+    #input()
+    #stack_func()
     falseCode = popStack(opStack, "ifelse")
     trueCode = popStack(opStack, "ifelse")
     bool = popStack(opStack, "ifelse")
@@ -168,8 +170,10 @@ def popStack (list, func):
 def isNumber (string):
     # I found this number validation code online
     try:
-        i = float(string)
-    except:
+        i = int(string)
+    except ValueError:
+        return False
+    except TypeError:
         return False
     else:
         return True
@@ -213,17 +217,17 @@ def doMath (op):
     operand1 = popStack(opStack, op)
     # Do the correct math based on the string input
     if (isNumber(operand1) and isNumber(operand2)):
-        operand1 = float(operand1)
-        operand2 = float(operand2)
+        operand1 = int(operand1)
+        operand2 = int(operand2)
         if op == "+":
-            result = operand1 + operand2
+            result = str(operand1 + operand2)
         elif op == "-":
-            result = operand1 - operand2
+            result = str(operand1 - operand2)
         elif op == "*":
-            result = operand1 * operand2
+            result = str(operand1 * operand2)
         elif op == "/":
             if operand2 != 0:
-                result = operannd1 / operand2
+                result = str(operannd1 / operand2)
             else: 
                 error("divByZero", op)
         elif op == "<":
@@ -244,12 +248,18 @@ def doMath (op):
 
 def doLogic (op):
     # Makes operands bools if they can
-    operand2 = toBool(popStack(opStack), op)
-    operand1 = toBool(popStack(opStack), op)    
+    operand2 = toBool(popStack(opStack, op), op)
+    operand1 = toBool(popStack(opStack, op), op)    
     if op == "and":
-        return operand1 and operand2
+        if (operand1 and operand2):
+            opStack.append("true")
+            return
     elif op == "or":
-        return operand1 or operand2
+        if (operand1 or operand2):
+            opStack.append("true")
+            return
+    opStack.append("false")
+    return
             
 
 def error (errorType, function):
@@ -305,12 +315,21 @@ opStack = []
 
 # This function is the recursive heart, nay the soul of this program
 def evaluate (tokens):
+    #print(tokens)
+    #print("Stack:")
+    #stack_func()
+    #printDicionaryStack()
+    #input()
     i = 0
     while (i < len(tokens)):
         token = tokens[i]
         #print("Read Token: ",token)
         if isIdentifier(token):
             #print("Pushing Token: ",token)
+            opStack.append(token)
+        elif isBool (token):
+            opStack.append(token)
+        elif isNumber(token):
             opStack.append(token)
         elif isIdentifier('/' + token):
             #print("Dereferencing Token: ",token)
@@ -328,6 +347,6 @@ def evaluate (tokens):
             opStack.append(tokens[i:closingBraceIndex + 1])
             i = closingBraceIndex
         else:
-            opStack.append(token)
+            error("notDef", "Evaluation")
         i += 1
     return

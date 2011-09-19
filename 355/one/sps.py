@@ -6,7 +6,6 @@ from basicFunctions import *
 def main():
     # Run the reader Funtions
     tokens = readerIntoTokens()
-
     # Start the execution
     evaluate(tokens)
     

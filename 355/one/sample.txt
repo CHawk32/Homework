@@ -1,16 +1,12 @@
-1 dict begin
-
 /fact 
 {
-    1 dict begin
-    /x exch def
-    x 0 eq
-    {1}
-    {x 1 sub fact x mul}
-    ifelse
-    end
-} 
+1 dict begin
+/x exch def
+x 0 eq
+{1}
+{x 1 sub fact x mul}
+ifelse
+end
+} def
 
-def
-
-1 fact
+10 fact
