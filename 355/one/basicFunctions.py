@@ -2,22 +2,62 @@ import re
 import sys
 import collections
 
-# add
+#
+#   Author: Cameron D Hawkins
+#   Date Modified: September 30, 2011
+#   File: basicFunctions.py
+#   File Desciption: This file contains all of the helper functions and global 
+#                   initializations that the sps.py function needs to work.
+#   Crutial Design Choices:
+#           1) System dictionary lives on the dictionary stack
+#           2) Everything on the evaluation stack is a string
+#           3) If any error is found, it prints it and quits executution 
+#           imediately
+#           4) Run-time execution is handled entirely by evaluate()
+#
+
+
+
+# Magic function: Given a string, return the PS tokens it contains
+def parse(string):
+    pattern = '/?[a-zA-Z][a-zA-Z0-9_]*|[-]?[0-9]+|[}{]+|%.*|[^\t\n ]'
+    tokens = re.findall(pattern, string)
+    return tokens
+
+# Reads form the input file into tokens
+def readerIntoTokens ():
+    # If the user did not enter in a file name, return
+    if (len(sys.argv) <= 1):
+        print ("No input file name specified.")
+        quit()
+    
+    fn = sys.argv[1]
+    
+    try:
+        filehandle = open(fn)
+    except:
+        print("Input File not found.")
+        quit()
+    
+    tokens = parse(''.join(filehandle.readlines()))
+    return tokens
+
+# add, calls the doMath function with the +
 def add_func():
     doMath('+')
     return
 
-# sub
+# sub, calls the doMath function with the -
 def sub_func():
     doMath('-')
     return
 
-# mul
+# mul, calls the doMath function with the *
 def mul_func():
     doMath('*')
     return
 
-# div
+# div, calls the doMath function with the /
 def div_func():
     doMath('/')
     return
@@ -27,35 +67,38 @@ def eq_func():
     operand2 = popStack(opStack, "eq")
     operand1 = popStack(opStack, "eq")
     
+    # Simple, if their equal, push 'true'
     if (operand1 == operand2):
         opStack.append("true")
     else:
         opStack.append("false")
     return
 
-# lt
+# lt, calls the doMath function with the <
 def lt_func():
     doMath('<')
     return
 
-# gt
+# gt, calls the doMath function with the >
 def gt_func():
     doMath('>')
     return
 
-# and
+# and, calls the doLogic function with 'and'
 def and_func():
     doLogic('and')
     return
 
-# or
+# or, calls the doLogic function with 'or'
 def or_func():
     doLogic('or')
     return
 
 # not
 def not_func():
+    # convert the string to a python bool, then evaluate it
     operand = toBool(popStack(opStack), "not")
+    # return its oposite
     if operand:
         opStack.append("false")
     else:
@@ -64,33 +107,38 @@ def not_func():
 
 # if
 def if_func():
+    # pop twice
     code = popStack(opStack, "if")
     bool = popStack(opStack, "if")
     
+    # if the bool is true, call evaluate on the code
     if isCode(code, "if"):
         bool = toBool(bool, "if")
         if (bool):
             evaluate(code[1:-1])
+    # else return
     return
 
 # ifelse
 def ifelse_func():
-    #input()
-    #stack_func()
+    # Pop 3 times
     falseCode = popStack(opStack, "ifelse")
     trueCode = popStack(opStack, "ifelse")
     bool = popStack(opStack, "ifelse")
     
+    # if the bool is true, call evaluate on the 'true' code
     if (isCode(falseCode, "ifelse") and isCode(trueCode,"ifelse")):
         bool = toBool(bool, "ifelse")
         if (bool):
             evaluate(trueCode[1:-1])
+        # else call evaluate on the 'false' code
         else:
             evaluate(falseCode[1:-1])
     return
 
 # dup
 def dup_func():
+    # pop once, push twice
     operand = popStack(opStack, "dup")
     opStack.append(operand)
     opStack.append(operand)
@@ -98,6 +146,7 @@ def dup_func():
 
 # exch
 def exch_func():
+    # pop twice, push back in opposite order
     operand1 = popStack(opStack, "exch")
     operand2 = popStack(opStack, "exch")
     opStack.append(operand1)
@@ -106,18 +155,22 @@ def exch_func():
 
 # pop
 def pop_func():
+    # just pop
     popStack(opStack, "pop")
     return
 
 # dict
 def dict_func():
+    # pop the dummy var off, then push an empty dictionary to the evaluation stack
     operand1 = popStack(opStack, "dict")
     opStack.append({})
     return
 
 # begin
 def begin_func():
+    # pop top element off the stack
     dictionary = popStack(opStack, "begin")
+    # if the its a dictionary, push it to the dictionary stack
     if (type(dictionary) != dict):
         error("Compatibility", "begin")
     else:
@@ -127,6 +180,7 @@ def begin_func():
 
 # end
 def end_func():
+    # make sure not to pop the system dictionary!
     if (len(dictStack) < 2):
         error("EmptyStack", "end")
     else:
@@ -135,13 +189,16 @@ def end_func():
 
 # def
 def def_func():
+    # pop the value, pop the identifier
     value = popStack(opStack, "def")
     identifier = popStack(opStack, "def")
     
+    # if the identifier is in the proper form, define it on the top dictionary
     if (isIdentifier(identifier) == False):
         error("badIdentifier", "def")
     else:
-        # FILTHY
+        # On the top dicitonary, push the identifier without its first '/' character
+        # as the key for the 'value'
         dictStack[-1][identifier[1:]] = value
     return
 
@@ -149,16 +206,19 @@ def def_func():
 def stack_func():
     # My cool reverse printing function
     for i in range(len(opStack)):
+        # Print the -ith element
+        # made sure it's not off by 1
         print(opStack[-(i + 1)])
     return
 
 # =
 def eqOp_func():
+    # pretty simple, pop the stack and print it 
     operand = popStack(opStack, "=")
     print(operand)
     return
 
-# Pop the stack, with error handling
+# Generic pop the stack function, with error handling
 def popStack (list, func):
     if (len(list) <= 0):
         error("EmptyStack", func)
@@ -261,7 +321,7 @@ def doLogic (op):
     opStack.append("false")
     return
             
-
+# Generic error printing function, lets you know what function failed and why it failed
 def error (errorType, function):
     print("Execution Error in:", function)
     if errorType == "EmptyStack":
@@ -278,9 +338,13 @@ def error (errorType, function):
 
 # Search a dictionary from top to bottom for identifier
 def searchDictionaryStack (identifier):
+    # iterate through the dictionary stack from right to left
     for i in range(len(dictStack)):
+        # get the top dictionary
         tmp = dictStack[-(i + 1)]
+        # look through it for the identifier
         if (identifier[1:] in tmp):
+            # found it!
             return tmp.get(identifier[1:])
     error("notDef", identifier)
 
@@ -288,6 +352,7 @@ def searchDictionaryStack (identifier):
 def printDicionaryStack():
     print ("=================================================")
     for i in range(len(dictStack)):
+        # print the dicitonary stack right to left
         print ("Dictionary ", i, " :")
         print (dictStack[-(i + 1)])
         print ("=================================================")
@@ -307,46 +372,64 @@ def findMatchingCurlyBrace (tokens, start):
     sys.exit(1)
     
 
-
+# initialize the global dictionary stack with all of the built in functions
 dictStack = [{'add': add_func, 'sub': sub_func, 'mul': mul_func, 'div': div_func, 'eq': eq_func, 'lt': lt_func, 'gt': gt_func, 'and': and_func, 'or': or_func, 'not': not_func, 'if': if_func, 'ifelse': ifelse_func, 'dup': dup_func, 'exch': exch_func, 'pop': pop_func, 'dict': dict_func, 'begin': begin_func, 'end': end_func, 'def': def_func, 'stack': stack_func, '=': eqOp_func }]
 
+# initialize the global operation stack as an empty list
 opStack = []
 
 
 # This function is the recursive heart, nay the soul of this program
 def evaluate (tokens):
-    #print(tokens)
-    #print("Stack:")
-    #stack_func()
-    #printDicionaryStack()
-    #input()
+    # Takes in a list of tokens, executable PostScript 
     i = 0
+    # I used a while loop. Breaking the rules, I know...
+    # But I could not find a more elegant way to be able to push large segments of code
+    # without using i < len(tokens) because I need to be able to jump forward, see
+    # 'elif (token == "{")' for details
     while (i < len(tokens)):
+        # Run-time Execution:
         token = tokens[i]
-        #print("Read Token: ",token)
+        # if its an identifier with a '/' at the beginning, just push it
         if isIdentifier(token):
             #print("Pushing Token: ",token)
             opStack.append(token)
+        # elif its a PS bool, push it 
         elif isBool (token):
             opStack.append(token)
+        # elif its a number, push it as a string -> everything on the stack is a string.
         elif isNumber(token):
             opStack.append(token)
+        # elif its an identifier that needs to be dereferenced: 
         elif isIdentifier('/' + token):
-            #print("Dereferencing Token: ",token)
-            # got to find its value
+            # got to dictionary to find its value
             definition = searchDictionaryStack('/' + token)
+            # if its a system function, means that its a python "callable instance"
             if (isinstance(definition, collections.Callable)):
-                #print("Calling Token: ",token)
+                # call the function associated with the definition
                 definition()
+            # else if it is defined as PS code
             elif (isCode(definition, definition)):
+                # Recursively call evaluate on it without its {}
                 evaluate(definition[1:-1])
             else:
+                # else, its a value, push it to the stack
                 opStack.append(definition)
+        # elif executable code is in the tokens
         elif (token == "{"):
+            # fast-forward through the input tokens till you find the matchin bracket
             closingBraceIndex = findMatchingCurlyBrace(tokens, i)
+            # push that list of code onto the stack
             opStack.append(tokens[i:closingBraceIndex + 1])
+            # jump the evaluation 'i' till the end of the code on the stack
             i = closingBraceIndex
         else:
             error("notDef", "Evaluation")
         i += 1
+        # go to the next token!
     return
+
+
+# Exit gracefully
+def quit ():
+    sys.exit(1)

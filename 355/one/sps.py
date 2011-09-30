@@ -3,50 +3,31 @@ import sys
 
 from basicFunctions import *
 
+#
+#   Author: Cameron D Hawkins
+#   Date Modified: September 30, 2011
+#   File: sps.py
+#   File Desciption: This file is has a python executable main function 
+#   Crutial Design Choices:
+#           1) This function doesnt run unless its caled from terminal
+#
+
 def main():
     # Run the reader Funtions
     tokens = readerIntoTokens()
+    
     # Start the execution
     evaluate(tokens)
     
-    
+    # Exit Output
     print ("\n============== Evaluation Complete ==============")
-    print ("Here is the content of the stack:")
+    print ("Here is the content of the stack, top to bottom:")
     stack_func()
     print ("And Here is the library of dictionaries:")
     printDicionaryStack()
     print ("Have a nice day :)")
     return
 
-
-# Given a string, return the tokens it contains
-def parse(string):
-    pattern = '/?[a-zA-Z][a-zA-Z0-9_]*|[-]?[0-9]+|[}{]+|%.*|[^\t\n ]'
-    tokens = re.findall(pattern, string)
-    return tokens
-
-# Reads form the input file into tokens
-def readerIntoTokens ():
-    # If the user did not enter in a file name, return
-    if (len(sys.argv) <= 1):
-        print ("No input file name specified.")
-        quit()
-    
-    fn = sys.argv[1]
-    
-    try:
-        filehandle = open(fn)
-    except:
-        print("Input File not found.")
-        quit()
-    
-    tokens = parse(''.join(filehandle.readlines()))
-    return tokens
-    
-
-# Exit gracefully
-def quit ():
-    sys.exit(1)
 
 
 # Run main, only if this function was called from terminal.

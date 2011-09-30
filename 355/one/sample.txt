@@ -10,3 +10,5 @@ end
 } def
 
 10 fact
+
+1 2 3 { /thisIsCode 5 6 7 }
