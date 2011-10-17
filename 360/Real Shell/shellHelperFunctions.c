@@ -87,10 +87,10 @@ void runPrompt (void) {
     int i = 0;
     char buff[64] = {0};
     
-    strcpy(buff, (char*) get_current_dir_name());
+    getwd(buff);
     
     // Get only this directories name
-    i = strlen(buff);
+    i = 64;
     while (buff[i] != '/') {
         i--;
     }
