@@ -81,6 +81,11 @@ int main (int argc, char* argv[], char* env[]) {
                     default:
                         break;
                 }
+                
+                
+                // First Try command as absoulte pathname
+                execve(command, inputArgumentsList, env);
+                
                 // Execution attempt loop:
                 strcpy(executionString, strtok(envPaths, ":"));
                 while (executionString[0] != '\0') {
@@ -90,6 +95,8 @@ int main (int argc, char* argv[], char* env[]) {
                     execve(executionString, inputArgumentsList, env);
                     strcpy(executionString, strtok(NULL, ":"));
                 }
+                
+                
                 printf("Command %s could not be found.\n", command);
                 exitFunc(1);
             }
@@ -97,4 +104,5 @@ int main (int argc, char* argv[], char* env[]) {
     }
     return 0;
 }
+
 
